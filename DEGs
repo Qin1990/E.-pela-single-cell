@@ -1,0 +1,61 @@
+#identify DEGs
+library(DEsingle)
+library(Matrix)
+library(dplyr)
+library(patchwork)
+library(SingleCellExperiment)
+
+#FA_FN
+nm_count <- read.csv("/home/luqin/single_cell/bailachong/seurat/sample/DEsingle/FA_FN/FA_FN.csv",row.names = 1,check.names = FALSE)
+nm_count[is.na(nm_count)] <- 0
+#dim(nm_count)
+sce <- SingleCellExperiment(assays = list(counts = nm_count))
+
+group <- factor(c(rep(1,4624), rep(2,5949))) 
+
+results <- DEsingle(counts = sce, group = group)
+results.classified <- DEtype(results = results, threshold = 0.01)
+
+write.csv(results.classified, "FA_FN_DEGs.csv")
+
+
+#MA_FA
+nm_count <- read.csv("/home/luqin/single_cell/bailachong/seurat/sample/DEsingle/FA_FN/MA_FA.csv",row.names = 1,check.names = FALSE)
+nm_count[is.na(nm_count)] <- 0
+#dim(nm_count)
+sce <- SingleCellExperiment(assays = list(counts = nm_count))
+
+group <- factor(c(rep(1,8854), rep(2,4624))) 
+
+results <- DEsingle(counts = sce, group = group)
+results.classified <- DEtype(results = results, threshold = 0.01)
+
+write.csv(results.classified, "MA_FA_DEGs.csv")
+
+
+#MA_MP
+nm_count <- read.csv("/home/luqin/single_cell/bailachong/seurat/sample/DEsingle/FA_FN/MA_MP.csv",row.names = 1,check.names = FALSE)
+nm_count[is.na(nm_count)] <- 0
+#dim(nm_count)
+sce <- SingleCellExperiment(assays = list(counts = nm_count))
+
+group <- factor(c(rep(1,8854), rep(2,4437))) 
+
+results <- DEsingle(counts = sce, group = group)
+results.classified <- DEtype(results = results, threshold = 0.01)
+
+write.csv(results.classified, "MA_MP_DEGs.csv")
+
+
+#MP_FN
+nm_count <- read.csv("/home/luqin/single_cell/bailachong/seurat/sample/DEsingle/FA_FN/MP_FN.csv",row.names = 1,check.names = FALSE)
+nm_count[is.na(nm_count)] <- 0
+#dim(nm_count)
+sce <- SingleCellExperiment(assays = list(counts = nm_count))
+
+group <- factor(c(rep(1,4437), rep(2,5949)))  
+
+results <- DEsingle(counts = sce, group = group)
+results.classified <- DEtype(results = results, threshold = 0.01)
+
+write.csv(results.classified, "MP_FN_DEGs.csv")
