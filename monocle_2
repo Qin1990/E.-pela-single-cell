@@ -1,0 +1,141 @@
+options(repos='http://mirrors.tuna.tsinghua.edu.cn/CRAN/')
+options(BioC_mirror="http://mirrors.ustc.edu.cn/bioc/")  
+############################################################
+library(Seurat)
+library(monocle)
+library(ggplot2)
+library(cowplot)
+library(Matrix)
+library(dplyr)
+
+#Figure 3I and Figure 5
+#Rename clusters(FA and FA)
+WWS.integrated <- RenameIdents(
+  object = WWS.integrated,
+  "0" = "endocrine cells", "1" = "imaginal disc C1.8+ cells","2" = "fat body","3" = "epithelial cells",
+  "4" = "enteroendocrine cells","5" = "imaginal disc C1.8+ cells","6" = "oocytes","7" = "endocrine cells",
+  "8" = "gland cells", "9" = "gland cells","10" = "melanocytes","11" = "gland cells",
+  "12" = "taste cells", "13" = "immune cells","14" = "melanocytes","15" = "skeletal muscle cells",
+  "16" = "enterocytes","17" = "skeletal muscle cells","18" = "lens epithelial cells","19" = "gland cells")
+
+#Rename clusters(MA and MP)
+WWS.integrated <- RenameIdents(
+  object = WWS.integrated,
+  "0" = "imaginal disc C1.8+ cells", "1" = "endocrine cells","2" = "enteroendocrine cells","3" = "endocrine cells",
+  "4" = "imaginal disc C1.8+ cells","5" = "epithelial cells","6" = "neuroendocrine cells","7" = "neuroendocrine cells",
+  "8" = "fat body", "9" = "endotheliocytes","10" = "gland cells","11" = "gland cells",
+  "12" = "gland cells", "13" = "skeletal muscle cells","14" = "gland cells","15" = "lens epithelial cells",
+  "16" = "immune cells","17" = "taste cells","18" = "gland cells","19" = "melanocytes",
+  "20" = "enterocytes", "21" = "olfactory cells","22" = "gland cells")
+
+
+WWS.integrated[['cell_type']] <- WWS.integrated@active.ident 
+levels(WWS.integrated)
+saveRDS(WWS.integrated, file = "nishixv_sigeyang.rds")
+
+
+##monocle2
+nishixv <- readRDS("nishixv_taste.rds")
+load("MA_MP_state4.rda")
+exp.matrix<-as(as.matrix(nishixv@assays$RNA@counts), 'sparseMatrix')
+p_data <- nishixv@meta.data 
+p_data$celltype <- nishixv@active.ident
+f_data <- data.frame(gene_short_name = row.names(nishixv),row.names = row.names(nishixv))
+pd <- new('AnnotatedDataFrame', data = p_data) 
+fd <- new('AnnotatedDataFrame', data = f_data)
+cds <- newCellDataSet(exp.matrix,
+                      phenoData = pd,
+                      featureData = fd,
+                      lowerDetectionLimit = 0.5,
+                      expressionFamily = negbinomial.size())
+
+cds <- estimateSizeFactors(cds)
+cds <- estimateDispersions(cds)
+
+cds <- detectGenes(cds, min_expr = 0.1) 
+print(head(fData(cds)))
+expressed_genes <- row.names(subset(fData(cds),
+    num_cells_expressed >= 2)) 
+
+#Find DEGs
+diff <- differentialGeneTest(cds[expressed_genes,],fullModelFormulaStr="~orig.ident",cores=1) 
+head(diff)
+
+deg <- subset(diff, qval < 0.01) 
+deg <- deg[order(diff$qval,decreasing=F),]
+head(deg)
+write.table(deg,file="DEG.xls",col.names=T,row.names=F,sep="\t",quote=F)
+
+## visualization
+ordergene <- rownames(deg) 
+cds <- setOrderingFilter(cds, ordergene) 
+
+pdf("train.ordergenes.pdf")
+plot_ordering_genes(cds)
+dev.off()
+
+cds <- reduceDimension(cds, max_components = 2,
+    method = 'DDRTree')
+
+#Sets the root of the pseudo-timeline
+cds <- orderCells(cds)
+
+cds <- orderCells(cds, root_state = 2) 
+
+#visualization
+pdf("value.pseudotime.pdf",width = 7,height = 7)
+plot_cell_trajectory(cds,color_by="Pseudotime", size=1,show_backbone=TRUE) 
+dev.off()
+
+transparent
+cols_1 <- c("#FF8888","#DC143C", "#87CECB", "#008B8B")
+cols_1 <- c("transparent", "transparent","transparent","#F4799E","transparent","transparent","transparent","transparent","transparent","#999900","transparent","#B30000","#3333CC")
+pdf("cluster.pdf",width = 5,height = 5)
+plot_cell_trajectory(cds,color_by = "cell_type", size=1) + 
+  scale_colour_manual(values = cols_1)
+dev.off()
+
+pdf("cell_state.monocle.state.pdf",width = 7,height = 7)
+plot_cell_trajectory(cds, color_by = "State",size=1,show_backbone=TRUE)
+dev.off()
+
+cols_1 <- c("#3399CC","#3399CC", "#3399CC", "#3399CC", "#3399CC", "#3399CC", "#3399CC","#3399CC", "#FF0000")
+pdf("cell.clusters.pdf",width = 7,height = 7)
+plot_cell_trajectory(cds, color_by = "seurat_clusters") + 
+  scale_colour_manual(values = cols_1)
+dev.off()
+
+pdf("train.monocle.state.faceted.pdf",width = 10,height = 7)
+plot_cell_trajectory(cds, color_by = "State") + facet_wrap("~State", nrow = 1)
+dev.off()
+
+
+
+#check target genes
+keygenes <- head(ordergene,4)  #Top 4
+cds_subset <- cds[keygenes,]
+##visualization
+p1 <- plot_genes_in_pseudotime(cds_subset, color_by = "State")
+p2 <- plot_genes_in_pseudotime(cds_subset, color_by = "cell_type")
+p3 <- plot_genes_in_pseudotime(cds_subset, color_by = "Pseudotime")
+plotc <- p1|p2|p3
+ggsave("Genes_pseudotimeplot.pdf", plot = plotc, width = 16, height = 8)
+#Designated gene
+s.genes <- c("Ech001099","Ech001099")
+cols_1 <- c("#0099CC", "#006699","#FF6666","#F4799E","#9999CC","#33CCCC","#009933","#66FF99","#CC6666","#999900","#8894A2","#B30000","#3333CC")
+p1 <- plot_genes_jitter(cds[s.genes,], grouping = "State", color_by = "cell_type") + 
+  scale_colour_manual(values = cols_1)
+p2 <- plot_genes_violin(cds[s.genes,], grouping = "State", color_by = "cell_type")
+p3 <- plot_genes_in_pseudotime(cds[s.genes,], color_by = "State")
+plotc <- p1|p2|p3
+ggsave("Genes_Jitterplot.pdf", plot = plotc, width = 16, height = 8)
+
+# pseudochronodifferential genes
+Time_diff <- differentialGeneTest(cds[ordergene,], cores = 1,fullModelFormulaStr = "~sm.ns(Pseudotime)")
+Time_diff <- Time_diff[,c(5,2,3,4,1,6,7)] 
+write.csv(Time_diff, "Time_diff_all.csv", row.names = F)
+
+#visualization
+Time_genes <- c("Ech005641","Ech008802")
+p = plot_pseudotime_heatmap(cds[Time_genes,], num_clusters=1, show_rownames=T, return_heatmap=T)
+ggsave("5641_8802.pdf", p, width = 5, height = 5)
