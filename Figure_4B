@@ -1,0 +1,29 @@
+#Figure 4B
+DefaultAssay(experiment.tsne) <- "RNA"
+cluster <- experiment.tsne$seurat_clusters
+cl <- c("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19")
+IDX <- list()
+for (i in 1:length(cl)){
+  IDX[[i]] <- which(cluster==cl[i])
+}
+
+geneList_selected <- c(top5$gene)
+idx <- matrix(1, 1, length(geneList_selected))
+for (i in 1:length(geneList_selected)){
+  idx[i] <- which(rownames(experiment.tsne)  %in%  geneList_selected[i])
+}
+
+expression <- matrix(0, length(geneList_selected), length(cl))
+for (i in 1:length(cl)){
+  buffer <- as.matrix(experiment.tsne@assays$RNA@data[,IDX[[i]]])
+  buffer <- buffer[idx,]
+  expression[,i] <- rowMeans(buffer, na.rm = TRUE)
+}
+rownames(expression) <- geneList_selected
+colnames(expression) <- c("0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19")
+
+tiff('heatmap.tiff', units="in", width=6.5, height=5.5, res=300, compression = 'lzw')
+pheatmap(expression, scale = "row", cluster_rows = FALSE, cluster_cols = FALSE, 
+         show_colnames = TRUE, show_rownames = TRUE, raster=TRUE,gaps_col = c(4, 6),
+         color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(100))
+dev.off()
