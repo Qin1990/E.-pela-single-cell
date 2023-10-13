@@ -1,0 +1,294 @@
+title: "sc_WWS_Comparison"
+date: "13/10/2023"
+---
+
+#######
+#######
+# Integrate and analyse WWS dataset
+library(Seurat)
+library(dplyr)
+library(Matrix)
+library(cowplot)
+library(ggplot2)
+library(loomR)
+
+
+# Load datasets
+Female_nymphs.counts_1=read.csv("/home/luqin/single_cell/bailachong/seurat/CZ-FL_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
+Female_nymphs.counts_1=t(Female_nymphs.counts_1)
+Male_adult <- CreateSeuratObject(counts = Female_nymphs.counts_1, 
+                           project = "MA", min.features = 100)
+
+# Define mito genes
+mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech010879","Ech010902","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech011025","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
+all(mito.genes %in% rownames(Male_adult))
+percent.mito.male_adult = Matrix::colSums(Male_adult@assays$RNA@counts[mito.genes, ])/Matrix::colSums(Male_adult@assays$RNA@counts)
+
+# AddMetaData adds columns to object@data.info, and is a great place to stash QC stats
+Male_adult[['percent.mito']] <- percent.mito.male_adult
+VlnPlot(object = Male_adult, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+
+# Do QC
+FeatureScatter(object = Male_adult, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Male_adult, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+Male_adult <- subset(x = Male_adult, subset = nFeature_RNA > 150 & nFeature_RNA < 3700 & percent.mito < 0.3 & nCount_RNA < 20000)
+
+FeatureScatter(object = Male_adult, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Male_adult, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+VlnPlot(object = Male_adult, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+
+table(Male_adult@meta.data$orig.ident)
+summary(Male_adult@meta.data$nFeature_RNA)   
+
+#Second sample
+Female_nymphs.counts_2=read.csv("/home/luqin/single_cell/bailachong/seurat/CZ-FL1_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
+Female_nymphs.counts_2=t(Female_nymphs.counts_2)
+Female_adult <- CreateSeuratObject(counts = Female_nymphs.counts_2, 
+                           project = "FA", min.features = 100)
+mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech010879","Ech010902","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech001034","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
+all(mito.genes %in% rownames(Female_adult))
+percent.mito.female_adult = Matrix::colSums(Female_adult@assays$RNA@counts[mito.genes, ])/Matrix::colSums(Female_adult@assays$RNA@counts)
+Female_adult[['percent.mito']] <- percent.mito.female_adult
+
+table(Female_adult@meta.data$orig.ident)
+summary(Female_adult@meta.data$nFeature_RNA)  
+VlnPlot(object = Female_adult, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Female_adult, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Female_adult, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+Female_adult <- subset(x = Female_adult, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mito < 0.3 & nCount_RNA < 38000)
+FeatureScatter(object = Female_adult, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Female_adult, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+VlnPlot(object = Female_adult, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+table(Female_adult@meta.data$orig.ident)
+summary(Female_adult@meta.data$nFeature_RNA)  
+
+#Third sample
+Female_nymphs.counts_3=read.csv("/home/luqin/single_cell/bailachong/seurat/CZ-FL2_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
+Female_nymphs.counts_3=t(Female_nymphs.counts_3)
+Male_pupa <- CreateSeuratObject(counts = Female_nymphs.counts_3, 
+                           project = "MP", min.features = 100)
+mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech011009","Ech010902","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech001034","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
+all(mito.genes %in% rownames(Male_pupa))
+percent.mito.male_pupa = Matrix::colSums(Male_pupa@assays$RNA@counts[mito.genes, ])/Matrix::colSums(Male_pupa@assays$RNA@counts)
+Male_pupa[['percent.mito']] <- percent.mito.male_pupa
+
+table(Male_pupa@meta.data$orig.ident)
+summary(Male_pupa@meta.data$nFeature_RNA)   
+VlnPlot(object = Male_pupa, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Male_pupa, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Male_pupa, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+Male_pupa <- subset(x = Male_pupa, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mito < 0.3 & nCount_RNA < 35000)
+VlnPlot(object = Male_pupa, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Male_pupa, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Male_pupa, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+table(Male_pupa@meta.data$orig.ident)
+summary(Male_pupa@meta.data$nFeature_RNA)   
+
+
+#Forth sample
+wws.counts_4=read.csv("/home/luqin/single_cell/bailachong/seurat/CZ-FL4_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
+wws.counts_4=t(wws.counts_4)
+Female_nymphs <- CreateSeuratObject(counts = wws.counts_4, 
+                           project = "FN", min.features = 100)
+mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech010879","Ech010890","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech011025","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
+all(mito.genes %in% rownames(Female_nymphs))
+percent.mito.female_nymphs = Matrix::colSums(Female_nymphs@assays$RNA@counts[mito.genes, ])/Matrix::colSums(Female_nymphs@assays$RNA@counts)
+Female_nymphs[['percent.mito']] <- percent.mito.female_nymphs
+
+table(Female_nymphs@meta.data$orig.ident)
+summary(Female_nymphs@meta.data$nFeature_RNA)   
+VlnPlot(object = Female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+Female_nymphs <- subset(x = Female_nymphs, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mito < 0.3 & nCount_RNA < 40000)
+VlnPlot(object = Female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+table(Female_nymphs@meta.data$orig.ident)
+summary(Female_nymphs@meta.data$nFeature_RNA)  
+
+
+
+Male_adult@meta.data$Condition <- "MA"
+Female_adult@meta.data$Condition <- "FA"
+Male_pupa@meta.data$Condition <- "MP"
+Female_nymphs@meta.data$Condition <- "FN"
+
+Male_adult <- NormalizeData(Male_adult, verbose = FALSE)
+Male_adult <- FindVariableFeatures(Male_adult, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+Female_adult <- NormalizeData(Female_adult, verbose = FALSE)
+Female_adult <- FindVariableFeatures(Female_adult, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+Male_pupa <- NormalizeData(Male_pupa, verbose = FALSE)
+Male_pupa <- FindVariableFeatures(Male_pupa, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+Female_nymphs <- NormalizeData(Female_nymphs, verbose = FALSE)
+Female_nymphs <- FindVariableFeatures(Female_nymphs, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+
+# Now integrate the three datasets
+WWS.anchors <- FindIntegrationAnchors(object.list = c(Male_adult,Male_pupa,Female_adult,Female_nymphs), dims = 1:30)
+WWS.integrated <- IntegrateData(anchorset = WWS.anchors, dims = 1:30)
+
+# Set during IntegrateData
+DefaultAssay(WWS.integrated) <- "integrated"
+table(WWS.integrated@meta.data$orig.ident)
+summary(WWS.integrated@meta.data$nFeature_RNA)
+
+# Run the standard workflow for visualization and clustering
+WWS.integrated <- ScaleData(WWS.integrated, verbose = FALSE, vars.to.regress = "nCount_RNA")
+WWS.integrated <- RunPCA(WWS.integrated, npcs = 20, verbose = FALSE)
+WWS.integrated <- RunUMAP(WWS.integrated, reduction = "pca", dims = 1:20)
+WWS.integrated <- FindNeighbors(WWS.integrated, reduction = "pca", dims = 1:20)
+WWS.integrated <- FindClusters(WWS.integrated, resolution = 0.5)
+
+WWS.integrated@meta.data$Tech <- "BD"
+WWS.integrated = SetIdent(WWS.integrated, value = WWS.integrated@meta.data$Tech)
+pdf(paste0("./","/control_","PC.pdf"),width = 5,height = 4)
+VlnPlot(WWS.integrated, pt.size = 0, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+dev.off()
+
+WWS.integrated = SetIdent(WWS.integrated, value = WWS.integrated@meta.data$seurat_clusters)
+
+table(WWS.integrated@meta.data$Sample)
+table(WWS.integrated@meta.data$orig.ident)
+summary(WWS.integrated@meta.data$nFeature_RNA)
+summary(WWS.integrated@meta.data$nCount_RNA)
+
+#Picture Plots
+pdf(paste0("./","/CellCluster-group_condition3_0.1_",max(dim.use),".pdf"),width = 5,height = 4)
+DimPlot(WWS.integrated, reduction = "umap", group.by = "Condition", pt.size = 0.1, cols = c("#6699CC","#33CCCC", "#FF6699", "#CC3399"))
+dev.off()
+
+p1 <- DimPlot(WWS.integrated, reduction = "umap", group.by = "Condition", pt.size = 0.3)
+
+pdf(paste0("./","/CellCluster-group_label_0.3",max(dim.use),".pdf"),width = 5,height = 4)
+DimPlot(WWS.integrated, reduction = "umap", label = TRUE, pt.size = 0.3)
+dev.off()
+
+plot_grid(p1, p2)
+p1 <- DimPlot(WWS.integrated, reduction = "umap", group.by = "nFeature_RNA")
+p2 <- DimPlot(WWS.integrated, reduction = "umap", label = TRUE)
+plot_grid(p1, p2)
+
+
+#Find All Marker Genes
+all.markers <- FindAllMarkers(WWS.integrated, only.pos = TRUE, 
+                              min.pct = 0.3, logfc.threshold = 0.25)
+write.table(all.markers,
+            file=paste0("./","/","_total_marker_genes_umap_",max(dim.use),"PC.txt"),
+            sep="\t",quote = F,row.names = F)
+
+
+#Rename groups
+WWS.integrated <- RenameIdents(
+  object = WWS.integrated,
+  "0" = "neuroendocrine cells", "1" = "fat bady","2" = "imaginal disc C1.8+ cells","3" = "enteroendocrine cell",
+  "4" = "endocrine cells","5" = "epithelial cells","6" = "neuroendocrine cells","7" = "endocrine cells",
+  "8" = "gland cells", "9" = "endotheliocytes","10" = "sperm cells","11" = "gland cells",
+  "12" = "skeletal muscle cells", "13" = "gland cells","14" = "oocytes","15" = "immune cells",
+  "16" = "taste cells","17" = "olfactory cells","18" = "gland cells","19" = "melanocytes",
+  "20" = "lens epithelial cells", "21" = "enterocytes","22" = "skeletal muscle cells","23" = "skeletal muscle cells",
+  "24" = "gland cells")
+
+
+#Picture_plots
+pdf(paste0("./","/picture",max(dim.use),".pdf"),width = 9,height = 6)
+DimPlot(object = WWS.integrated, pt.size=0.5,
+        reduction = "umap",label = F,
+        cols = c("#FF6666","#0099CC", "#00CC99", "#006699","#F4799E","#9999CC", "#33CCCC","#B30000","#009933","#66FF99","#FF0099","#999900","#FF3300","#CC6666","#663300","#8894A2","#3333CC"))
+dev.off()
+
+
+#Violin-plots
+pdf(paste0("./","/Ech005992",max(dim.use),"PC.pdf"),width = 9,height = 6)
+VlnPlot(WWS.integrated,features = "Ech005992", idents = "gland cells", pt.size = 0, split.by = "Condition",cols = c("#6699CC","#33CCCC", "#FF6699", "#CC3399"))
+dev.off()
+
+
+#heat_plot
+pdf(paste0("./","/heat_plot",max(dim.use),"PC.pdf"),width = 10,height = 7)
+DotPlot(all.cluster, features = c("Ech003545", "Ech005713", "Ech006855", "Ech000668", "Ech004386", "Ech000382", "Ech005694", "Ech008653", "Ech009212", "Ech009527", "Ech005920", "Ech006248", "Ech004797"))
+        #split.by = "Condition", cols = c("#FF6699", "#FF6699", "#FF6699","#FF6699"))+
+  RotatedAxis()
+dev.off()
+
+
+#heat_map
+pdf(paste0("./","/ heat_map",max(dim.use),"PC.pdf"),width = 5,height = 4)
+FeaturePlot(WWS.integrated,features = "Ech002140", cols = c("white","red"))
+dev.off()
+#different_cluster
+pdf(paste0("./","/ heat_map2",max(dim.use),"PC.pdf"),width = 12,height = 3)
+FeaturePlot(WWS.integrated,features = "Ech002140", split.by = "orig.ident", cols = c("white","red"))
+dev.off()
+
+# Calculate the proportion of different cells in each cluster and plot it
+meta_data <- nishixv@meta.data 
+plot_data <- data.frame(table(meta_data$orig.ident,meta_data$seurat_clusters))
+plot_data$Total <- apply(plot_data,1,function(x)sum(plot_data[plot_data$Var1 == x[1],3]))
+plot_data <- plot_data %>% mutate(Percentage = round(Freq/Total,3) * 100)
+ggplot(plot_data,aes(x = Var1,y = Percentage,fill = Var2)) +
+  geom_bar(stat = "identity",position = "stack") +
+  theme_classic() + 
+  theme(axis.title.x = element_blank()) + labs(fill = "clusters")
+
+# Now do marker genes
+DefaultAssay(WWS.integrated) <- "RNA"
+
+# Former way to analyse
+WWS.integrated.markers <- FindAllMarkers(WWS.integrated, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+WWS.integrated.markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_log2FC)
+WWS.integrated.top10.markers <- WWS.integrated.markers %>% group_by(cluster) %>% top_n(10, avg_log2FC)
+write.csv(WWS.integrated.markers, "./allMarkers_test.csv")
+write.csv(WWS.integrated.top10.markers, "./top10Markers.csv")
+
+# Scale RNA assay for visualisation
+WWS.integrated <- ScaleData(WWS.integrated, verbose = FALSE)
+DimPlot(WWS.integrated)
+FeaturePlot(WWS.integrated, features = "nFeature_RNA", max.cutoff = 5000)
+DimPlot(WWS.integrated, reduction = "umap", label = TRUE)
+
+# Heatmap (make sure RNA is active)
+WWS.integrated.markers <- read.csv("./allMarkers_20PCs_RegressedCounts.csv")
+WWS.integrated.markers.top10 <- read.csv("./top10Markers.csv")
+
+# Heatmap cell states (and downsample 100,200,300)
+top10.states <- WWS.integrated.markers %>% group_by(cluster) %>% subset(p_val_adj < 0.05) %>%top_n(n = 10, wt = avg_log2FC)
+DoHeatmap(WWS.integrated, features = as.character(top10.states$gene), size = 2, hjust = 0.1, angle = 30, draw.lines = FALSE) + theme(axis.text.y = element_text(size = 5)) + scale_fill_gradientn(colors = c("white", "#FF0000"))
+
+
+#Top 4 marker genes
+all.markers <- WWS.integrated.markers
+
+marker.sig <- all.markers %>% 
+  mutate(Ratio = round(pct.1/pct.2,3)) %>%
+  filter(p_val_adj <= 0.05)
+
+for(cluster_id in unique(marker.sig$cluster)){
+  # cluster.markers <- FindMarkers(experiment.aggregate, ident.1 = cluster, min.pct = 0.3)
+  # cluster.markers <- as.data.frame(cluster.markers) %>% 
+  #   mutate(Gene = rownames(cluster.markers))
+  cl4.genes <- marker.sig %>% 
+    filter(cluster == cluster_id) %>%
+    arrange(desc(avg_log2FC)) 
+  cl4.genes <- cl4.genes[17:min(nrow(cl4.genes),20),"gene"]
+  
+  #VlnPlot
+  pvn <- VlnPlot(WWS.integrated, features = cl4.genes,ncol = 2,pt.size = 0, split.by = "orig.ident")
+  pdf(paste0("./","/violin",cluster_id,max(dim.use),"PC.pdf"),width = 10,height = 8)
+  print(pvn)
+  dev.off()
+  
+  #Feather plot 
+  pvn <- FeaturePlot(WWS.integrated,features=cl4.genes,ncol = 2, split.by = "orig.ident")
+  pdf(paste0("./","/heat_map",cluster_id,max(dim.use),"PC.pdf"),width = 12,height = 10)
+  print(pvn)
+  dev.off()
+  
+  #RidgePlot
+ # pvn<-RidgePlot(WWS.integrated, features = cl4.genes, ncol = 2)
+ # pdf(paste0("./","/MarkerGene-RidgePlot_cluster",cluster_id,"_tsne_",max(dim.use),"PC.pdf"),width = 7,height = 6)
+ # print(pvn)
+ # dev.off()
+}
+rm(cl4.genes,cluster_id,pvn)
+
+
