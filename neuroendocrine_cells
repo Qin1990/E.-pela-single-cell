@@ -1,0 +1,160 @@
+#---  private use for NU scRNA    ---#
+
+# Extraction submatrix
+cells_sub <- subset(WWS.integrated@meta.data, 
+                    seurat_clusters %in% c("12","22","23"))
+scRNA_sub <- subset(WWS.integrated, 
+                   cells=row.names(cells_sub))
+				   
+scRNA_sub <- FindVariableFeatures(scRNA_sub, 
+                                             selection.method = "vst",
+                                             nfeatures = 1000)
+
+#the overall level of expression after standardization
+top10 <- head(x = VariableFeatures(scRNA_sub), 10)
+plot3 <- VariableFeaturePlot(scRNA_sub)
+plot4 <- LabelPoints(plot = plot3, points = top10)
+pdf(file = paste0("./","/norm-feature_variable_plot.pdf"), width = 8, height = 5)
+plot3 + plot4
+dev.off()
+
+#### homogenization and PCA ####
+scale.genes <-  rownames(scRNAsub)
+scRNA_sub <- ScaleData(
+  object = scRNA_sub,
+  do.scale = FALSE,
+  do.center = FALSE,
+  vars.to.regress = c("orig.ident","percent.mt"))
+
+#PCA
+scRNA_sub <- RunPCA(object = scRNA_sub, 
+                               features = VariableFeatures(scRNA_sub),
+                               verbose = F,npcs = 50)
+
+#visualization
+pdf(paste0("./",sam.name,"/PCA-VizDimLoadings.pdf"),width = 7,height = 5)
+VizDimLoadings(scRNA_sub, dims = 1:2, reduction = "pca")
+dev.off()
+
+#visualization
+pdf(paste0("./",sam.name,"/PCA-DimPlot.pdf"),width = 5,height = 4)
+DimPlot(scRNA_sub, reduction = "pca")
+dev.off()
+
+#visualization
+pdf(paste0("./",sam.name,"/PCA-DimHeatmap.pdf"),width = 5,height = 4)
+DimHeatmap(scRNA_sub, dims = 1:6, cells = 500, balanced = TRUE)
+dev.off()
+
+####  identified clusters ####
+scRNA_sub <- JackStraw(scRNA_sub, num.replicate = 100,dims = 40)
+scRNA_sub <- ScoreJackStraw(scRNA_sub, dims = 1:40)
+pdf(paste0("./","/PCA-JackStrawPlot_40.pdf"),width = 6,height = 5)
+JackStrawPlot(object = scRNA_sub, dims = 1:40)
+dev.off()
+
+#visualization
+pdf(paste0("./",sam.name,"/PCA-ElbowPlot.pdf"),width = 6,height = 5)
+ElbowPlot(scRNA_sub,ndims = 40)
+dev.off()
+
+dim.use <- 1:20
+
+DimPlot(object = scRNA_sub, split.by = "orig.ident",pt.size=0.1,label = T)
+
+
+#rename cluster
+scRNA_sub <- RenameIdents(
+  object = scRNA_sub,
+  "0" = "1","1" = "2","2" = "3","3" = "4","4" = "5","5" = "6","6" = "6","7" = "7","8" = "8")
+pdf(paste0("./","/Rename_",max(dim.use),"PC.pdf"),width = 5,height = 5)
+DimPlot(object = scRNA_sub, pt.size=0.3,
+        reduction = "umap",label = F, split.by = "orig.ident",ncol = 2,
+        cols = c("#CC0066","#3399CC", "#006666", "#00FF33", "#9966CC", "#FF6600", "#FFFF00", "#FF0000"))
+dev.off()
+
+
+#Violin map
+
+pdf(paste0("./","/Ech005252-VlnPlot",".pdf"),width = 5,height = 2)
+VlnPlot(scRNA_sub, features = "Ech005252",pt.size = 0,
+        cols = c("#CC0066","#3399CC", "#006666", "#00FF33", "#9966CC", "#FF6600", "#FFFF00", "#FF0000"))
+dev.off()
+
+#Feather plot
+
+pdf(paste0("./","/FeaturePlot",max(dim.use),".pdf"),width = 7,height = 6)
+FeaturePlot(scRNA_sub,features = "Ech008653",split.by = "orig.ident",ncol = 2)
+dev.off()
+
+
+#point diagram
+pdf(paste0("./","/gene_name",max(dim.use),"PC.pdf"),width = 7,height = 4)
+DotPlot(scRNA_sub, features = c("Ech002814","Ech009263","Ech008936","Ech009922","Ech002609","Ech006260","Ech009232","Ech009262","Ech000746","Ech005853","Ech004279","Ech007871","Ech008356","Ech004005","Ech002122","Ech010235","Ech005926"),  
+  cols = c("grey", "#FF3366")) +
+  RotatedAxis() 
+dev.off()
+
+#check target genes
+pdf(paste0("./","/Ech009333",max(dim.use),"PC.pdf"),width = 5,height = 2)
+DotPlot(all.cluster, split.by = "Condition", features = "Ech002168",  cols = c("#FF0066", "#FF0066", "#FF0066","#FF0066")) + 
+  RotatedAxis()   
+dev.off()
+
+pdf(paste0("./","/Ech009333",max(dim.use),"PC.pdf"),width = 10,height = 7)
+DoHeatmap(scRNA_sub, features = c("Ech004102", "Ech004294"),size = 4,draw.lines = FALSE) +
+  theme(axis.text.y = element_text(size = 10))+scale_fill_gradientn(colors = c("grey", "#FF6699"))
+dev.off()
+
+
+####  marker genes####
+tcell_all.markers <- FindAllMarkers(scRNA_sub, only.pos = TRUE, 
+                              min.pct = 0.3, logfc.threshold = 0.25)
+write.table(tcell_all.markers,
+            file=paste0("./","/","_total_marker_genes_tsne_",max(dim.use),"PC.txt"),
+            sep="\t",quote = F,row.names = F)
+
+marker.sig <- tcell_all.markers %>% 
+  mutate(Ratio = round(pct.1/pct.2,3)) %>%
+  filter(p_val_adj <= 0.05)  
+
+for(cluster_id in unique(marker.sig$cluster)){
+  # cluster.markers <- FindMarkers(experiment.aggregate, ident.1 = cluster, min.pct = 0.3)
+  # cluster.markers <- as.data.frame(cluster.markers) %>% 
+  #   mutate(Gene = rownames(cluster.markers))
+  cl4.genes <- marker.sig %>% 
+    filter(cluster == cluster_id) %>%
+    arrange(desc(avg_log2FC))  
+  cl4.genes <- cl4.genes[1:min(nrow(cl4.genes),4),"gene"]
+  
+#VlnPlot
+
+  pvn <- VlnPlot(scRNA_sub, features = cl4.genes,ncol = 2,pt.size = 0)
+  pdf(paste0("./",sam.name,"/MarkerGene-VlnPlot_Tcell_cluster",cluster_id,"_tsne_",max(dim.use),"PC.pdf"),width = 7,height = 6)
+  print(pvn)
+  dev.off()
+  
+  #Feather plot 
+  pvn <- FeaturePlot(scRNA_sub,features=cl4.genes,ncol = 2)
+  pdf(paste0("./",sam.name,"/MarkerGene-FeaturePlot_Tcell_cluster",cluster_id,"_tsne_",max(dim.use),"PC.pdf"),width = 7,height = 6)
+  print(pvn)
+  dev.off()
+  
+}
+rm(cl4.genes,cluster_id,pvn)
+
+#Top 5 marker genes 
+top5 <- marker.sig %>% group_by(cluster) %>% 
+  top_n(n = 5, wt = avg_log2FC)
+
+##visualization
+pdf(paste0("./",sam.name,"/MarkerGene-Heatmap_Tcell_tsne_",max(dim.use),"PC.pdf"))
+DoHeatmap(scRNA_sub, features = top5$gene,size = 4,draw.lines = FALSE) +
+  theme(axis.text.y = element_text(size = 6)) + scale_fill_gradientn(colors = c("#CCCCCC", "white", "#990000"))
+dev.off()
+
+#dotplot
+pdf(paste0("./",sam.name,"/MarkerGene-DotPlot_Tcell_cluster_tsne_",max(dim.use),"PC.pdf"),width = 50,height = 5)
+DotPlot(scRNA_sub, features = unique(top5$gene))+
+  RotatedAxis()
+dev.off()
