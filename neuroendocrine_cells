@@ -2,7 +2,7 @@
 
 # Extraction submatrix
 cells_sub <- subset(WWS.integrated@meta.data, 
-                    seurat_clusters %in% c("12","22","23"))
+                    seurat_clusters %in% c("0","2"))
 scRNA_sub <- subset(WWS.integrated, 
                    cells=row.names(cells_sub))
 				   
