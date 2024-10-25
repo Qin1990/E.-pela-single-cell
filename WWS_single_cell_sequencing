@@ -12,17 +12,16 @@ library(cowplot)
 library(ggplot2)
 library(loomR)
 
-
 # Load datasets
-Female_nymphs.counts_1=read.csv("/home/luqin/single_cell/bailachong/seurat/CZ-FL_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
-Female_nymphs.counts_1=t(Female_nymphs.counts_1)
-Male_adult <- CreateSeuratObject(counts = Female_nymphs.counts_1, 
+Male_adult.counts_1=read.csv("/home/luqin/single_cell/bailachong/seurat/matrix/CZ-FL_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
+Male_adult.counts_1=t(Male_adult.counts_1)
+Male_adult <- CreateSeuratObject(counts = Male_adult.counts_1, 
                            project = "MA", min.features = 100)
 
 # Define mito genes
 mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech010879","Ech010902","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech011025","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
 all(mito.genes %in% rownames(Male_adult))
-percent.mito.male_adult = Matrix::colSums(Male_adult@assays$RNA@counts[mito.genes, ])/Matrix::colSums(Male_adult@assays$RNA@counts)
+percent.mito.male_adult = Matrix::colSums(Male_adult@assays$RNA$counts[mito.genes, ])/Matrix::colSums(Male_adult@assays$RNA$counts)
 
 # AddMetaData adds columns to object@data.info, and is a great place to stash QC stats
 Male_adult[['percent.mito']] <- percent.mito.male_adult
@@ -41,39 +40,39 @@ table(Male_adult@meta.data$orig.ident)
 summary(Male_adult@meta.data$nFeature_RNA)   
 
 #Second sample
-Female_nymphs.counts_2=read.csv("/home/luqin/single_cell/bailachong/seurat/CZ-FL1_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
-Female_nymphs.counts_2=t(Female_nymphs.counts_2)
-Female_adult <- CreateSeuratObject(counts = Female_nymphs.counts_2, 
-                           project = "FA", min.features = 100)
+Fourth_female_nymphs.counts_2=read.csv("/home/luqin/single_cell/bailachong/seurat/matrix/CZ-FL1_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
+Fourth_female_nymphs.counts_2=t(Fourth_female_nymphs.counts_2)
+Fourth_female_nymphs <- CreateSeuratObject(counts = Fourth_female_nymphs.counts_2, 
+                           project = "FFN", min.features = 100)
 mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech010879","Ech010902","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech001034","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
-all(mito.genes %in% rownames(Female_adult))
-percent.mito.female_adult = Matrix::colSums(Female_adult@assays$RNA@counts[mito.genes, ])/Matrix::colSums(Female_adult@assays$RNA@counts)
-Female_adult[['percent.mito']] <- percent.mito.female_adult
+all(mito.genes %in% rownames(Fourth_female_nymphs))
+percent.mito.fourth_female_nymphs = Matrix::colSums(Fourth_female_nymphs@assays$RNA$counts[mito.genes, ])/Matrix::colSums(Fourth_female_nymphs@assays$RNA$counts)
+Fourth_female_nymphs[['percent.mito']] <- percent.mito.fourth_female_nymphs
 
-table(Female_adult@meta.data$orig.ident)
-summary(Female_adult@meta.data$nFeature_RNA)  
-VlnPlot(object = Female_adult, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
-FeatureScatter(object = Female_adult, feature1 = "nCount_RNA", feature2 = "percent.mito")
-FeatureScatter(object = Female_adult, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-Female_adult <- subset(x = Female_adult, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mito < 0.3 & nCount_RNA < 38000)
-FeatureScatter(object = Female_adult, feature1 = "nCount_RNA", feature2 = "percent.mito")
-FeatureScatter(object = Female_adult, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-VlnPlot(object = Female_adult, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
-table(Female_adult@meta.data$orig.ident)
-summary(Female_adult@meta.data$nFeature_RNA)  
+table(Fourth_female_nymphs@meta.data$orig.ident)
+summary(Fourth_female_nymphs@meta.data$nFeature_RNA)  
+VlnPlot(object = Fourth_female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Fourth_female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Fourth_female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+Fourth_female_nymphs <- subset(x = Fourth_female_nymphs, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mito < 0.3 & nCount_RNA < 38000)
+FeatureScatter(object = Fourth_female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Fourth_female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+VlnPlot(object = Fourth_female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+table(Fourth_female_nymphs@meta.data$orig.ident)
+summary(Fourth_female_nymphs@meta.data$nFeature_RNA)  
 
 #Third sample
-Female_nymphs.counts_3=read.csv("/home/luqin/single_cell/bailachong/seurat/CZ-FL2_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
-Female_nymphs.counts_3=t(Female_nymphs.counts_3)
-Male_pupa <- CreateSeuratObject(counts = Female_nymphs.counts_3, 
+Male_pupa.counts_3=read.csv("/home/luqin/single_cell/bailachong/seurat/matrix/CZ-FL2_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
+Male_pupa.counts_3=t(Male_pupa.counts_3)
+Male_pupa <- CreateSeuratObject(counts = Male_pupa.counts_3, 
                            project = "MP", min.features = 100)
 mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech011009","Ech010902","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech001034","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
 all(mito.genes %in% rownames(Male_pupa))
-percent.mito.male_pupa = Matrix::colSums(Male_pupa@assays$RNA@counts[mito.genes, ])/Matrix::colSums(Male_pupa@assays$RNA@counts)
+percent.mito.male_pupa = Matrix::colSums(Male_pupa@assays$RNA$counts[mito.genes, ])/Matrix::colSums(Male_pupa@assays$RNA$counts)
 Male_pupa[['percent.mito']] <- percent.mito.male_pupa
 
 table(Male_pupa@meta.data$orig.ident)
-summary(Male_pupa@meta.data$nFeature_RNA)   
+summary(Male_pupa@meta.data$nFeature_RNA)  
 VlnPlot(object = Male_pupa, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
 FeatureScatter(object = Male_pupa, feature1 = "nCount_RNA", feature2 = "percent.mito")
 FeatureScatter(object = Male_pupa, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
@@ -82,46 +81,98 @@ VlnPlot(object = Male_pupa, features = c("nFeature_RNA", "nCount_RNA", "percent.
 FeatureScatter(object = Male_pupa, feature1 = "nCount_RNA", feature2 = "percent.mito")
 FeatureScatter(object = Male_pupa, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 table(Male_pupa@meta.data$orig.ident)
-summary(Male_pupa@meta.data$nFeature_RNA)   
+summary(Male_pupa@meta.data$nFeature_RNA)  
 
 
 #Forth sample
-wws.counts_4=read.csv("/home/luqin/single_cell/bailachong/seurat/CZ-FL4_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
-wws.counts_4=t(wws.counts_4)
-Female_nymphs <- CreateSeuratObject(counts = wws.counts_4, 
-                           project = "FN", min.features = 100)
+Third_female_nymphs.counts_4=read.csv("/home/luqin/single_cell/bailachong/seurat/matrix/CZ-FL4_RSEC_MolsPerCell.csv", header = T,row.names = 1,skip = 6,check.names = FALSE)
+Third_female_nymphs.counts_4=t(Third_female_nymphs.counts_4)
+Third_female_nymphs <- CreateSeuratObject(counts = Third_female_nymphs.counts_4, 
+                           project = "TFN", min.features = 100)
 mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech010879","Ech010890","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech011025","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
-all(mito.genes %in% rownames(Female_nymphs))
-percent.mito.female_nymphs = Matrix::colSums(Female_nymphs@assays$RNA@counts[mito.genes, ])/Matrix::colSums(Female_nymphs@assays$RNA@counts)
-Female_nymphs[['percent.mito']] <- percent.mito.female_nymphs
+all(mito.genes %in% rownames(Third_female_nymphs))
+percent.mito.third_female_nymphs = Matrix::colSums(Third_female_nymphs@assays$RNA$counts[mito.genes, ])/Matrix::colSums(Third_female_nymphs@assays$RNA$counts)
+Third_female_nymphs[['percent.mito']] <- percent.mito.third_female_nymphs
 
-table(Female_nymphs@meta.data$orig.ident)
-summary(Female_nymphs@meta.data$nFeature_RNA)   
-VlnPlot(object = Female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
-FeatureScatter(object = Female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
-FeatureScatter(object = Female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-Female_nymphs <- subset(x = Female_nymphs, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mito < 0.3 & nCount_RNA < 40000)
-VlnPlot(object = Female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
-FeatureScatter(object = Female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
-FeatureScatter(object = Female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-table(Female_nymphs@meta.data$orig.ident)
-summary(Female_nymphs@meta.data$nFeature_RNA)  
+table(Third_female_nymphs@meta.data$orig.ident)
+summary(Third_female_nymphs@meta.data$nFeature_RNA)   
+VlnPlot(object = Third_female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Third_female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Third_female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+Third_female_nymphs <- subset(x = Third_female_nymphs, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mito < 0.3 & nCount_RNA < 40000)
+VlnPlot(object = Third_female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Third_female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Third_female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+table(Third_female_nymphs@meta.data$orig.ident)
+summary(Third_female_nymphs@meta.data$nFeature_RNA)   
 
+
+#Fifth sample
+Second_female_nymphs.counts_5=Read10X("/home/luqin/single_cell/bailachong/seurat/matrix/second/female/")
+Second_female_nymphs <- CreateSeuratObject(counts = Second_female_nymphs.counts_5, 
+                           project = "SFN", min.features = 100)
+mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
+all(mito.genes %in% rownames(Second_female_nymphs))
+percent.mito.second_female_nymphs = Matrix::colSums(Second_female_nymphs@assays$RNA$counts[mito.genes, ])/Matrix::colSums(Second_female_nymphs@assays$RNA$counts)
+Second_female_nymphs[['percent.mito']] <- percent.mito.second_female_nymphs
+
+table(Second_female_nymphs@meta.data$orig.ident)
+summary(Second_female_nymphs@meta.data$nFeature_RNA)   
+VlnPlot(object = Second_female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Second_female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Second_female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+Second_female_nymphs <- subset(x = Second_female_nymphs, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mito < 0.3 & nCount_RNA < 40000)
+VlnPlot(object = Second_female_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Second_female_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Second_female_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+table(Second_female_nymphs@meta.data$orig.ident)
+summary(Second_female_nymphs@meta.data$nFeature_RNA)   
+
+
+
+#Sixth sample
+Second_male_nymphs.counts_6=Read10X("/home/luqin/single_cell/bailachong/seurat/matrix/second/male/")
+Second_male_nymphs <- CreateSeuratObject(counts = Second_male_nymphs.counts_6, 
+                           project = "SMN", min.features = 100)
+mito.genes <- c("Ech002531","Ech000361","Ech001009","Ech002866","Ech004747","Ech004754","Ech005276","Ech005545","Ech006900","Ech007819","Ech008015","Ech008464","Ech008639","Ech009598","Ech010242","Ech010685","Ech006900","Ech001658","Ech005031","Ech008672","Ech000877","Ech003091","Ech004539","Ech001045","Ech001777","Ech007104","Ech009362","Ech004302","Ech006702","Ech001744","Ech005617","Ech001666","Ech000090","Ech002092")
+all(mito.genes %in% rownames(Second_male_nymphs))
+percent.mito.second_male_nymphs = Matrix::colSums(Second_male_nymphs@assays$RNA$counts[mito.genes, ])/Matrix::colSums(Second_male_nymphs@assays$RNA$counts)
+Second_male_nymphs[['percent.mito']] <- percent.mito.second_male_nymphs
+
+table(Second_male_nymphs@meta.data$orig.ident)
+summary(Second_male_nymphs@meta.data$nFeature_RNA)   
+VlnPlot(object = Second_male_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Second_male_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Second_male_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+Second_male_nymphs <- subset(x = Second_male_nymphs, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mito < 0.3 & nCount_RNA < 40000)
+VlnPlot(object = Second_male_nymphs, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3)
+FeatureScatter(object = Second_male_nymphs, feature1 = "nCount_RNA", feature2 = "percent.mito")
+FeatureScatter(object = Second_male_nymphs, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+table(Second_male_nymphs@meta.data$orig.ident)
+summary(Second_male_nymphs@meta.data$nFeature_RNA)   
 
 
 Male_adult@meta.data$Condition <- "MA"
-Female_adult@meta.data$Condition <- "FA"
+Fourth_female_nymphs@meta.data$Condition <- "FFN"
 Male_pupa@meta.data$Condition <- "MP"
-Female_nymphs@meta.data$Condition <- "FN"
+Second_female_nymphs@meta.data$Condition <- "SFN"
+Third_female_nymphs@meta.data$Condition <- "TFN"
+Second_male_nymphs@meta.data$Condition <- "SMN"
+
 
 Male_adult <- NormalizeData(Male_adult, verbose = FALSE)
 Male_adult <- FindVariableFeatures(Male_adult, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
-Female_adult <- NormalizeData(Female_adult, verbose = FALSE)
-Female_adult <- FindVariableFeatures(Female_adult, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+Fourth_female_nymphs <- NormalizeData(Fourth_female_nymphs, verbose = FALSE)
+Fourth_female_nymphs <- FindVariableFeatures(Fourth_female_nymphs, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
 Male_pupa <- NormalizeData(Male_pupa, verbose = FALSE)
 Male_pupa <- FindVariableFeatures(Male_pupa, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
-Female_nymphs <- NormalizeData(Female_nymphs, verbose = FALSE)
-Female_nymphs <- FindVariableFeatures(Female_nymphs, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+Third_female_nymphs <- NormalizeData(Third_female_nymphs, verbose = FALSE)
+Third_female_nymphs <- FindVariableFeatures(Third_female_nymphs, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+Second_female_nymphs <- NormalizeData(Second_female_nymphs, verbose = FALSE)
+Second_female_nymphs <- FindVariableFeatures(Second_female_nymphs, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+Second_male_nymphs <- NormalizeData(Second_male_nymphs, verbose = FALSE)
+Second_male_nymphs <- FindVariableFeatures(Second_male_nymphs, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+
 
 # Now integrate the three datasets
 WWS.anchors <- FindIntegrationAnchors(object.list = c(Male_adult,Male_pupa,Female_adult,Female_nymphs), dims = 1:30)
