@@ -1,15 +1,15 @@
 #Figure 2F
 library(pheatmap)
 library(RColorBrewer)
-DefaultAssay(WWS.integrated) <- "RNA"
+DefaultAssay(WWS.integrated) <- "integrated"
 cluster <- WWS.integrated$orig.ident
-cl <- c("FA","FN","MA","MP")
+cl <- c("SFN","TFN","FFN","SMN","MP","MA")
 IDX <- list()
 for (i in 1:length(cl)){
   IDX[[i]] <- which(cluster==cl[i])
 }
 
-geneList_selected <- c("Ech004797","Ech005713","Ech005920","Ech000668","Ech009527","Ech000382","Ech004386","Ech009168","Ech005694","Ech008653")
+geneList_selected <- c("Ech004797","Ech005713","Ech005920","Ech000668","Ech009527","Ech000382","Ech009168","Ech005694","Ech008653")
 idx <- matrix(1, 1, length(geneList_selected))
 for (i in 1:length(geneList_selected)){
   idx[i] <- which(rownames(WWS.integrated)  %in%  geneList_selected[i])
@@ -17,19 +17,15 @@ for (i in 1:length(geneList_selected)){
 
 expression <- matrix(0, length(geneList_selected), length(cl))
 for (i in 1:length(cl)){
-  buffer <- as.matrix(WWS.integrated@assays$RNA@data[,IDX[[i]]])
+  buffer <- as.matrix(WWS.integrated@assays$integrated@data[,IDX[[i]]])
   buffer <- buffer[idx,]
   expression[,i] <- rowMeans(buffer, na.rm = TRUE)
 }
 rownames(expression) <- geneList_selected
-colnames(expression) <- c("FA","FN","MA","MP")
+colnames(expression) <- c("SFN","TFN","FFN","SMN","MP","MA")
 
 tiff('heatmap.tiff', units="in", width=3.5, height=3.5, res=300, compression = 'lzw')
 pheatmap(expression, scale = "row", cluster_rows = FALSE, cluster_cols = FALSE, 
-         show_colnames = TRUE, show_rownames = TRUE, raster=TRUE,gaps_col = c(1, 2,3),
+         show_colnames = TRUE, show_rownames = TRUE, raster=TRUE,gaps_col = c(1, 2,3,4,5),
          color = colorRampPalette(rev(brewer.pal(n = 7, name = "Spectral")))(100))
 dev.off()
-
-
-
-table(scRNA_sub@meta.data$orig.ident)
